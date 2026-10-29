@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Intelligent Driver Drowsiness Detection</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <h1>Intelligent Driver Drowsiness Detection</h1>
+      <p class="subtitle">Real-time drowsiness &amp; yawn monitoring — runs entirely in your browser</p>
+    </div>
+    <div class="header-actions">
+      <button id="btnCalibrate" class="btn" disabled>Recalibrate</button>
+      <button id="btnStart" class="btn btn-primary">Start Camera</button>
+    </div>
+  </header>
+
+  <main class="dashboard">
+    <section class="video-panel">
+      <div class="video-wrap">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="overlay"></canvas>
+        <div id="banner" class="banner hidden"></div>
+        <div id="calBanner" class="banner cal hidden"></div>
+      </div>
+      <div class="video-status">
+        <span id="captureLed" class="led led-off"></span>
+        <span id="captureText">Camera stopped</span>
+      </div>
+    </section>
+
+    <aside class="metrics-panel">
+      <div class="status-card">
+        <h2>Current State</h2>
+        <div id="stateLight" class="state-light state-monitoring">Monitoring</div>
+      </div>
+
+      <div class="metric-grid">
+        <div class="metric-card">
+          <span class="metric-label">EAR</span>
+          <span id="mEar" class="metric-value">--</span>
+          <span class="metric-thresh">thresh <span id="thEar">--</span></span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">Mouth Opening</span>
+          <span id="mLip" class="metric-value">--</span>
+          <span class="metric-thresh">thresh <span id="thLip">--</span></span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-label">FPS</span>
+          <span id="mFps" class="metric-value">--</span>
+        </div>
+      </div>
+
+      <div class="alert-list">
+        <h2>Alerts</h2>
+        <div class="alert-row" id="rowDrowsy">
+          <span class="alert-name">Drowsiness</span>
+          <span id="ledDrowsy" class="led led-sm led-off"></span>
+        </div>
+        <div class="alert-row" id="rowYawn">
+          <span class="alert-name">Yawning</span>
+          <span id="ledYawn" class="led led-sm led-off"></span>
+        </div>
+      </div>
+
+      <div class="counters">
+        <div class="counter">
+          <span id="cBlinks" class="counter-value">0</span>
+          <span class="counter-label">Blinks</span>
+        </div>
+      </div>
+
+      <p id="calStatus" class="cal-status">Press Start Camera to begin calibration.</p>
+    </aside>
+  </main>
+
+  <footer class="app-footer">
+    Detection runs locally in your browser via MediaPipe — no video is uploaded.
+  </footer>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

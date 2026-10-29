@@ -11,6 +11,7 @@ import cv2
 import os
 import logging
 import sys
+import winsound
 
 
 class DrowsinessYawnDetector:
@@ -55,7 +56,7 @@ class DrowsinessYawnDetector:
 
         # Initialize thresholds
         self.EYE_AR_THRESH = 0
-        self.YAWN_THRESH = 0
+        self.YAWN_THRESH = 20  # seeded high so closed-mouth baseline samples can be collected; recalculated after calibration
 
         # Load YOLO model
         print("Loading YOLO model...")
@@ -70,15 +71,14 @@ class DrowsinessYawnDetector:
 
     def alarm(self, msg):
         while self.alarm_status:
-            logging.info('Calling alarm')
-            s = 'espeak "' + msg + '"'
-            os.system(s)
+            logging.info('Calling alarm: %s', msg)
+            winsound.Beep(1000, 500)  # 1000 Hz for 500ms
+            time.sleep(0.3)
 
         if self.alarm_status2:
-            logging.info('Calling alarm')
+            logging.info('Calling alarm: %s', msg)
             self.saying = True
-            s = 'espeak "' + msg + '"'
-            os.system(s)
+            winsound.Beep(1000, 500)
             self.saying = False
 
     def eye_aspect_ratio(self, eye):
@@ -110,13 +110,16 @@ class DrowsinessYawnDetector:
 
     def collect_initial_measurements(self):
         # Collect initial measurements for EAR and Yawn threshold
-        while self.initial_ear_count < 30 or self.initial_yawn_count < 30:
+        frame_num = 0
+        MAX_CALIBRATION_FRAMES = 500  # safety cap so calibration can't hang forever
+        while (self.initial_ear_count < 30 or self.initial_yawn_count < 30) and frame_num < MAX_CALIBRATION_FRAMES:
             frame = self.vs.read()
             frame = imutils.resize(frame, width=450)
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
 
             # Drowsiness measurements
             rects = self.detector(gray, 0)
+            frame_num += 1
             for rect in rects:
                 shape = self.predictor(gray, rect)
                 shape = face_utils.shape_to_np(shape)
@@ -129,11 +132,17 @@ class DrowsinessYawnDetector:
                 if distance < self.YAWN_THRESH:
                     self.initial_yawn_sum += distance
                     self.initial_yawn_count += 1
-            # Calculate initial thresholds for EAR and Yawn
-            if self.initial_ear_count > 0:
-                self.EYE_AR_THRESH = self.initial_ear_sum / self.initial_ear_count
-            if self.initial_yawn_count > 0:
-                self.YAWN_THRESH = self.initial_yawn_sum / self.initial_yawn_count
+
+        # Final thresholds from collected baseline samples (computed once, after collection)
+        if self.initial_ear_count > 0:
+            self.EYE_AR_THRESH = self.initial_ear_sum / self.initial_ear_count
+        if self.initial_yawn_count > 0:
+            self.YAWN_THRESH = self.initial_yawn_sum / self.initial_yawn_count
+
+        if self.initial_ear_count == 0:
+            self.EYE_AR_THRESH = 0.25  # fallback default
+        if self.initial_yawn_count == 0:
+            self.YAWN_THRESH = 20  # fallback default
 
     def calculate_gaze_deviation(self, shape):
         left_eye_center = shape[37]

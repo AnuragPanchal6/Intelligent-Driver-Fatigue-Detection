@@ -1,4 +1,5 @@
+__pycache__/
+*.pyc
 
-main/yolov3.weights
-main/shape_predictor_68_face_landmarks.dat
-main/yolov3.cfg
+yolov3.weights
+shape_predictor_68_face_landmarks.dat
